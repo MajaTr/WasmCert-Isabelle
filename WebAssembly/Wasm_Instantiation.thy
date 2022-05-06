@@ -373,6 +373,62 @@ inductive instantiate :: "s \<Rightarrow> m \<Rightarrow> v_ext list \<Rightarro
     List.map2 (\<lambda>n d. Init_mem n (d_init d)) (map nat_of_int d_offs) (m_data m) = e_init_mems
     \<rbrakk> \<Longrightarrow> instantiate s m v_imps ((s', inst, v_exps), e_init_tabs@e_init_mems@start)"
 
+
+lemma map2_map_1:"map2 f (map g xs) ys = map2 (\<lambda>x y. f (g x) y) xs ys"
+  by (simp add: map_zip_map)
+
+abbreviation "reduces_to s f bes v \<equiv> reduce_trans (s,f,$*bes) (s,f,[$v])"
+abbreviation "elem_in_bounds s inst off e \<equiv> 
+  nat_of_int off + length (e_init e) \<le> tab_size ((tabs s)!((inst.tabs inst)!(e_tab e)))"
+abbreviation "data_in_bounds s inst off d \<equiv> 
+  nat_of_int off + length (d_init d) \<le> mem_length ((mems s)!((inst.mems inst)!(d_data d)))"
+abbreviation "elem_to_init_tab inst off e \<equiv> 
+  Init_tab (nat_of_int off) (map (\<lambda>i. (inst.funcs inst)!i) (e_init e))"
+abbreviation "data_to_init_mem inst off d \<equiv> Init_mem (nat_of_int off) (d_init d)"
+
+inductive instantiate' :: "s \<Rightarrow> m \<Rightarrow> v_ext list \<Rightarrow> 
+      ((s \<times> f \<times> (e list)) \<times> (module_export list)) \<Rightarrow> bool" where
+  "\<lbrakk>module_typing m t_imps t_exps;
+    list_all2 (external_typing s) v_imps t_imps;
+    alloc_module s m v_imps g_inits (s', inst, v_exps);
+    f = \<lparr> f_locs = [], f_inst = inst \<rparr>;
+    list_all2 (\<lambda>g v. reduces_to s' f (g_init g) (C v)) (m_globs m) g_inits;
+    list_all2 (\<lambda>e c. reduces_to s' f (e_off e) (C\<^sub>n (ConstInt32 c))) (m_elem m) e_offs;
+    list_all2 (\<lambda>d c. reduces_to s' f (d_off d) (C\<^sub>n (ConstInt32 c))) (m_data m) d_offs;
+    list_all2 (elem_in_bounds s' inst) e_offs (m_elem m);
+    list_all2 (data_in_bounds s' inst) d_offs (m_data m);
+    (case (m_start m) of None \<Rightarrow> [] | Some i_s \<Rightarrow> [Invoke ((inst.funcs inst)!i_s)]) = start;
+    map2 (elem_to_init_tab inst) e_offs (m_elem m) = e_init_tabs;
+    map2 (data_to_init_mem inst) d_offs (m_data m) = e_init_mems
+    \<rbrakk> \<Longrightarrow> instantiate' s m v_imps ((s', f, e_init_tabs@e_init_mems@start), v_exps)"
+
+
+lemma instantiate'_instantiate_equiv:
+  "instantiate' s m v_imps ((s', f, init_es), v_exps) = 
+  (f_locs f = [] \<and> instantiate s m v_imps ((s', f_inst f, v_exps), init_es))"
+proof - 
+  have 1:"instantiate' s m v_imps ((s', f, init_es), v_exps) \<Longrightarrow> f_locs f = []"
+    unfolding instantiate'.simps by auto
+
+  have 2:"instantiate' s m v_imps ((s', f, init_es), v_exps)
+     \<Longrightarrow> instantiate s m v_imps ((s', f_inst f, v_exps), init_es)" 
+    unfolding instantiate.simps instantiate'.simps 
+    apply(simp only: map2_map_1)
+      by fastforce
+  {
+    fix inst
+    assume "instantiate s m v_imps ((s', inst, v_exps), init_es)"
+    then have "instantiate' s m v_imps ((s', \<lparr>f_locs = [], f_inst = inst \<rparr>, init_es), v_exps)"
+      unfolding instantiate.simps instantiate'.simps
+      apply(simp only: map2_map_1)
+      by auto
+  }
+  then have 3:"f_locs f = [] \<Longrightarrow> instantiate s m v_imps ((s', f_inst f, v_exps), init_es)
+     \<Longrightarrow> instantiate' s m v_imps ((s', f, init_es), v_exps)" 
+    by (metis (full_types) f.surjective old.unit.exhaust)
+  show ?thesis using 1 2 3 by blast
+qed
+
 definition interp_get_v :: "s \<Rightarrow> inst \<Rightarrow> b_e list \<Rightarrow> v" where
   "interp_get_v s inst b_es = 
      (case run_v 2 0 (s,\<lparr> f_locs = [], f_inst = inst \<rparr>,b_es) of
