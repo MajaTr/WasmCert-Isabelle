@@ -687,4 +687,15 @@ proof -
   qed 
 qed
 
+theorem instantiation'_sound:
+  assumes "store_typing s"
+          "instantiate' s m v_imps ((s',f, init_es), v_exps)"
+  shows "\<turnstile> s'; f; init_es : []"
+        "\<exists>tes. list_all2 (\<lambda>v_exp te. external_typing s' (E_desc v_exp) te) v_exps tes"
+        "store_extension s s'"
+  using assms instantiation_sound
+  unfolding instantiate'_instantiate_equiv
+     apply(auto)
+  by (metis (full_types) f.surjective old.unit.exhaust)
+
 end
