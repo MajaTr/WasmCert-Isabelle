@@ -140,9 +140,9 @@ theorem instantiation_sound:
   assumes "store_typing s"
           "(instantiate s m v_imps ((s', inst, v_exps), init_es))"
   shows "store_typing s'"
-        "\<exists>\<C>. (inst_typing s' inst \<C> \<and> (s'\<bullet>\<C> \<turnstile> init_es : ([] _> [])))"
         "\<exists>tes. list_all2 (\<lambda>v_exp te. external_typing s' (E_desc v_exp) te) v_exps tes"
         "store_extension s s'"
+        "\<turnstile> s'; \<lparr> f_locs = [], f_inst = inst \<rparr>; init_es : []"
 proof -
   obtain t_imps t_exps g_inits f e_offs d_offs start e_init_tabs e_init_mems where 
     "module_typing m t_imps t_exps"  
@@ -556,8 +556,8 @@ proof -
     using instantiation_external_typing[OF s_alloc_module \<open>inst_typing s' inst \<C>\<close> c_is(5)] by -
 
 
-  show "\<exists>\<C>. (inst_typing s' inst \<C> \<and> (s'\<bullet>\<C> \<turnstile> init_es : ([] _> [])))"
-  proof -
+  have init_es_typing:"(s'\<bullet>\<C> \<turnstile> init_es : ([] _> []))"
+  proof - 
     have "s'\<bullet>\<C> \<turnstile> (case (m_start m) of None \<Rightarrow> [] | Some i_s \<Rightarrow> [Invoke ((inst.funcs inst)!i_s)]) : ([] _> [])"
     proof (cases "m_start m")
       case None
@@ -667,13 +667,24 @@ proof -
             by fastforce
         qed
       qed
-    ultimately have "(s'\<bullet>\<C> \<turnstile> init_es : ([] _> []))"
+    ultimately show ?thesis
       using e_type_comp_conc init_es_is s_start
-      by fastforce
-    thus ?thesis
-      using  s'_inst_t
-    by auto
+    by fastforce
   qed
+
+  show "\<turnstile> s'; \<lparr> f_locs = [], f_inst = inst \<rparr>; init_es : []" 
+  proof -
+    have 2:"frame_typing s' \<lparr>f_locs = [], f_inst = inst\<rparr> \<C>" 
+      unfolding frame_typing.simps
+      using s'_inst_t c_is(7)
+      by force
+    have 1:"s'\<bullet>None \<tturnstile>  \<lparr> f_locs = [], f_inst = inst \<rparr>;init_es : []" 
+      using e_typing_l_typing.intros(10)[OF 2, of None] init_es_typing
+      unfolding c_is(7)
+      by auto
+    show ?thesis unfolding config_typing.simps using 1 \<open>store_typing s'\<close> 
+      by auto
+  qed 
 qed
 
 end
