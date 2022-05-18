@@ -1289,10 +1289,10 @@ lemma make_empty_frame_m_triple:
   by (sep_auto heap:make_empty_inst_m_triple)
 
 lemma run_invoke_v_m_triple: 
-  shows "< s_m_assn i_s s s_m * inst_store_assn i_s> 
+  shows "< s_m_assn i_s s s_m * inst_assocs_assn i_s> 
   run_invoke_v_m n d (s_m, vs, i) 
   <\<lambda>(s_m', res_m). let (s', res) = run_invoke_v n d (s, vs, i)  in
-  \<exists>\<^sub>Ai_s'. \<up>(res_m = res) * s_m_assn i_s' s' s_m' * inst_store_assn i_s' >\<^sub>t"
+  \<exists>\<^sub>Ai_s'. \<up>(res_m = res) * s_m_assn i_s' s' s_m' * inst_assocs_assn i_s' >\<^sub>t"
 proof - 
   note 1 = cfg_m_assn_def fc_m_assn_def fcs_m_assn_def  locs_m_assn_def
   obtain ins in_ms where i_s:"i_s = (ins, in_ms)" 
@@ -1300,11 +1300,11 @@ proof -
   {
     fix f_locs1 f_inst2
     have "inst_m_assn (f_inst empty_frame) f_inst2 * locs_m_assn (f_locs empty_frame) f_locs1 
-        * s_m_assn i_s s s_m * inst_store_assn i_s
+        * s_m_assn i_s s s_m * inst_assocs_assn i_s
       \<Longrightarrow>\<^sub>A cfg_m_assn ((f_inst empty_frame)#ins, f_inst2#in_ms)
           (Config d s (Frame_context (Redex (rev vs) [Invoke i] []) [] 0 empty_frame) [])
           (Config_m d s_m (Frame_context_m (Redex (rev vs) [Invoke i] []) [] 0 f_locs1 f_inst2) [])"
-      unfolding 1 inst_store_assn_def i_s inst_at_def s_m_assn_def
+      unfolding 1 inst_assocs_assn_def i_s inst_at_def s_m_assn_def
       apply(sep_auto)
       sorry
   }
