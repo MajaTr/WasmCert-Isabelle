@@ -33,4 +33,27 @@ proof -
     by blast
 qed
 
+theorem preservation_trans:
+  assumes "\<turnstile> s;f;es : ts"
+          "reduce_trans (s,f,es) (s',f',es')"
+  shows "(\<turnstile> s';f';es' : ts) \<and> store_extension s s'"
+proof -
+  have 1:"(\<turnstile> s;f;es : ts) \<and> store_extension s s" using assms(1) store_extension_refl by auto
+
+  note 2 = assms(2)[simplified reduce_trans_def]
+  show ?thesis 
+    using 2
+  proof (induction "(s',f', es')" arbitrary: s' f' es' rule: rtranclp_induct)
+    case base
+    then show ?case using store_extension_refl assms(1) by auto
+  next
+    case (step y)
+    show ?case using step
+      apply(auto)
+      using preservation apply(auto)
+      using store_extension_trans by blast
+  qed
+qed 
+
+  
 end

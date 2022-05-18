@@ -133,11 +133,9 @@ definition cfg_m_assn :: "inst_assocs \<Rightarrow> config \<Rightarrow> config_
 )"     
 
 
-
 abbreviation "expect_assn A B x_opt y_opt \<equiv> (case x_opt of 
   Some x \<Rightarrow> (case y_opt of Some y \<Rightarrow> A x y | None \<Rightarrow> false)
   | None \<Rightarrow> (case y_opt of Some y \<Rightarrow> false | None \<Rightarrow> B)
   )"
-
 
 end

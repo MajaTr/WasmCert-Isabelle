@@ -711,4 +711,37 @@ lemma interp_instantiate_init_m_triple:
   apply(sep_auto heap:interp_instantiate_m_triple run_instantiate_m_triple
       split:res_inst_m.splits res_inst.splits prod.splits res.splits)
   done
+
+
+lemma run_fuzz_m_triple: 
+  "<emp> 
+  run_fuzz_m' n d m v_imps i args_bytes 
+  <\<lambda>r. \<up>(r = run_fuzz' n d m v_imps i args_bytes)>\<^sub>t"
+  supply [simp del] = run_invoke_v_m.simps run_invoke_v.simps 
+  apply(sep_auto heap:make_empty_store_m_triple interp_instantiate_init_m_triple
+      split:res_inst_m.splits res_inst.splits prod.splits v_ext.splits)
+       apply(sep_auto simp:s_m_assn_def heap:funcs_nth_type_triple)
+      apply(sep_auto split:tf.splits)
+       apply(sep_auto heap:run_invoke_v_m_triple[simplified s_m_assn_def])
+      apply(sep_auto split:prod.splits)
+  using cl_m_agree_type apply(auto)
+       apply(sep_auto heap:make_empty_store_m_triple interp_instantiate_init_m_triple 
+split:res_inst_m.splits)+
+  done
+
+lemma run_fuzz_m_soundness: 
+  assumes "execute (run_fuzz_m' n d m v_imps i args_bytes) h = Some (RValue vs, h') " 
+  shows "run_fuzz_spec m v_imps i args_bytes (v_stack_to_es vs)"
+proof -
+  have 1:"run (run_fuzz_m' n d m v_imps i args_bytes) (Some h) (Some h') (RValue vs)"
+    apply(rule run.regular)
+     apply(simp_all add: assms del:run_fuzz_m'.simps)
+    done
+  have 2:"run_fuzz' n d m v_imps i args_bytes = (RValue vs)" 
+    using hoare_tripleD(1)[OF run_fuzz_m_triple _ 1, of "{}"]
+    supply [simp del] = run_fuzz'.simps 
+    by sep_auto
+  show ?thesis by (rule run_fuzz_equiv[OF 2])
+qed
+
 end

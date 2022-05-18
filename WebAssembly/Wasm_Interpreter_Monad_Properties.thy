@@ -1293,9 +1293,11 @@ proof -
       \<Longrightarrow>\<^sub>A cfg_m_assn ((f_inst empty_frame)#ins, f_inst2#in_ms)
           (Config d s (Frame_context (Redex (rev vs) [Invoke i] []) [] 0 empty_frame) [])
           (Config_m d s_m (Frame_context_m (Redex (rev vs) [Invoke i] []) [] 0 f_locs1 f_inst2) [])"
-      unfolding 1 inst_assocs_assn_def i_s inst_at_def s_m_assn_def
+      unfolding 1 inst_assocs_assn_def i_s inst_at_def 
       apply(sep_auto)
-      sorry
+      apply(ent_backward_all r:s_m_assn_extend)
+      apply(sep_auto)
+      done
   }
   note 2 = this
 
