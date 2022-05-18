@@ -1309,7 +1309,6 @@ proof -
       sorry
   }
   note 2 = this
-
   show ?thesis 
     apply(sep_auto heap:make_empty_frame_m_triple)
      apply(rule cons_pre_rule[OF 2])
