@@ -14,19 +14,6 @@ method reinsert_list_idx for i :: nat =
 method extract_reinsert_list_idx for i :: nat uses heap = 
  extract_pre_pure?, extract_list_idx i, sep_auto heap:heap, extract_pre_pure?, reinsert_list_idx i
 
-lemma list_assn_basic_heap_rule: 
-  assumes "<P_i> c <Q>"
-    "P_i = P (xs!i) (ys!i) * F" "\<And>r. Q r \<Longrightarrow>\<^sub>A  P_i * R r" "i < length xs"
-  shows "<list_assn P xs ys * F> c <\<lambda>r. list_assn P xs ys * F * R r>"
-  unfolding list_assn_conv_idx
-  apply(insert assms(2, 4))
-  apply(extract_list_idx i)
-  apply(sep_auto heap:assms(1))
-  apply(rule ent_trans[OF fr_refl[OF assms(3)]])
-  apply(reinsert_list_idx i)
-  apply(sep_auto)
-  done
-
 lemmas is_complex_goal = asm_rl[of "< _ > _ < _ >"] asm_rl[of "_ \<Longrightarrow>\<^sub>A _"]
 
 method_setup then_else = \<open>let
@@ -147,6 +134,28 @@ lemma cl_m_agree_type: "cl_m_agree i_s cl cl_m \<Longrightarrow> cl_type cl = cl
   unfolding cl_m_agree_def cl_m_agree_j_def cl_type_def cl_m_type_def
   by (auto, simp split:cl.splits cl_m.splits)
 
+lemma cl_m_agree_j_extend: 
+  "cl_m_agree_j (ins, in_ms) j cl cl_m \<Longrightarrow> cl_m_agree_j (i#ins, i_m#in_ms) (j+1) cl cl_m" 
+  unfolding cl_m_agree_j_def inst_at_def
+  by (simp split:cl.splits cl_m.splits)
+
+lemma cl_m_agree_extend: 
+  "cl_m_agree (ins, in_ms) cl cl_m \<Longrightarrow> cl_m_agree (i#ins, i_m#in_ms) cl cl_m" 
+  unfolding cl_m_agree_def using cl_m_agree_j_extend by metis
+
+lemma funcs_m_assn_extend: 
+  "funcs_m_assn (ins, in_ms) fs fs_m \<Longrightarrow>\<^sub>A funcs_m_assn (i#ins, i_m#in_ms) fs fs_m"
+  unfolding funcs_m_assn_def 
+  apply(sep_auto)
+  using cl_m_agree_extend
+  by (simp add: list_all2_mono)
+
+lemma s_m_assn_extend:
+  "s_m_assn (ins, in_ms) s s_m \<Longrightarrow>\<^sub>A s_m_assn (i#ins, i_m#in_ms) s s_m"
+  unfolding s_m_assn_def 
+  apply(ent_backward_all r:funcs_m_assn_extend)
+  apply(sep_auto)
+  done
 
 lemma [sep_heap_rules]: "<tabinst_m_assn t t_m> 
     Array.len (fst t_m) 

@@ -254,25 +254,27 @@ definition interp_instantiate_init_m :: "s_m \<Rightarrow> m \<Rightarrow> v_ext
                                             | x \<Rightarrow> return x }"
 
 
-fun run_fuzz' :: "fuel \<Rightarrow> depth \<Rightarrow> m \<Rightarrow> v_ext list \<Rightarrow> (v list) option \<Rightarrow> res Heap" where
-  "run_fuzz' n d m v_imps opt_vs = do {
+fun run_fuzz_m' :: "fuel \<Rightarrow> depth \<Rightarrow> m \<Rightarrow> v_ext list \<Rightarrow> nat \<Rightarrow> bytes list \<Rightarrow> res Heap" where
+  "run_fuzz_m' n d m v_imps i args_bytes = do {
    init_s \<leftarrow> make_empty_store_m;
    i_res \<leftarrow> interp_instantiate_init_m init_s m v_imps;
    case i_res of
      (s', RI_res_m inst v_exps es) \<Rightarrow>
       (case es of 
-        [] \<Rightarrow> (case (List.find (\<lambda>exp. case (E_desc exp) of Ext_func i \<Rightarrow> True | _ \<Rightarrow> False) v_exps) of
-            Some exp \<Rightarrow> (case (E_desc exp) of Ext_func i \<Rightarrow> do {
-               cl \<leftarrow> Array.nth (s_m.funcs s') i;
+        [] \<Rightarrow> (if i < length v_exps then
+            case (E_desc (v_exps!i)) of Ext_func j \<Rightarrow> do {
+               cl \<leftarrow> Array.nth (s_m.funcs s') j;
                case (cl_m_type cl) of
                  (t1 _> t2) \<Rightarrow>
-                   let params = case opt_vs of Some vs \<Rightarrow> (rev vs) | None \<Rightarrow> (map bitzero t1) in
+                    if length args_bytes \<ge> length t1 then
+                   (let params = map2 wasm_deserialise args_bytes t1 in
                    do { 
-                   (s'', res) \<leftarrow> run_invoke_v_m n d (s', params, i);
-                   return res }
-            })
-          | None \<Rightarrow> return (RCrash (Error_invariant (STR ''no import to invoke''))))
-      | _ \<Rightarrow> return (RCrash (Error_invalid (STR ''start function''))))        
+                   (s'', res) \<leftarrow> run_invoke_v_m n d (s', params, j);
+                   return res })
+                else return (RCrash (Error_invariant (STR ''not enough arguments'')))
+            } | _ \<Rightarrow> return (RCrash (Error_invariant (STR ''not a function'')))
+              else return (RCrash (Error_invariant (STR ''out of bounds''))))
+      | _ \<Rightarrow> return (RCrash (Error_invalid (STR ''not run fully''))))        
   | (s', RI_crash_m res) \<Rightarrow> return (RCrash res)
   | (s', RI_trap_m msg) \<Rightarrow> return (RTrap msg) }"
 

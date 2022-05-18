@@ -1270,4 +1270,34 @@ definition interp_instantiate_init :: "s \<Rightarrow> m \<Rightarrow> v_ext lis
                                          | (s'', RValue []) \<Rightarrow> (s'', RI_res inst v_exps [])
                                          | (s'', RValue (x#xs)) \<Rightarrow> (s'', RI_crash (Error_invalid (STR ''start function''))))
                                      | x \<Rightarrow> x)"
+
+inductive run_fuzz_spec :: "m \<Rightarrow> v_ext list \<Rightarrow> nat \<Rightarrow> bytes list \<Rightarrow> e list \<Rightarrow> bool" where 
+  "\<lbrakk>instantiate' \<lparr>s.funcs = [], tabs = [], mems = [], globs = [] \<rparr> m v_imps ((s1, f1, es), v_exps);
+   reduce_trans (s1, f1, es) (s2, f2, []);
+   E_desc (v_exps!i) = (Ext_func j);
+   external_typing s2 (Ext_func j) (Te_func (t1 _> t2));
+   length args_bytes \<ge> length t1 \<and> map2 wasm_deserialise args_bytes t1 = args;
+   reduce_trans (s2, empty_frame, ($C* args) @ [Invoke j]) (s3, f3, vs)
+   \<rbrakk> \<Longrightarrow> run_fuzz_spec m v_imps i args_bytes vs"
+
+fun run_fuzz' :: "fuel \<Rightarrow> depth \<Rightarrow> m \<Rightarrow> v_ext list \<Rightarrow> nat \<Rightarrow> bytes list \<Rightarrow> res" where
+  "run_fuzz' n d m v_imps i args_bytes = 
+   (case interp_instantiate_init \<lparr>s.funcs = [], tabs = [], mems = [], globs = [] \<rparr>  m v_imps of
+     (s', RI_res inst v_exps es) \<Rightarrow>
+      (case es of 
+        [] \<Rightarrow> (if i < length v_exps then
+          case (E_desc (v_exps!i)) of Ext_func j \<Rightarrow> 
+               (case (cl_type ((s.funcs s')!j)) of
+                 (t1 _> t2) \<Rightarrow>   
+                   if length args_bytes \<ge> length t1 then
+                   (let params = map2 wasm_deserialise args_bytes t1 in
+                   let (s'', res) = run_invoke_v n d (s', params, j) in
+                   res)
+                   else RCrash (Error_invariant (STR ''not enough arguments'')))
+          | _ \<Rightarrow> RCrash (Error_invariant (STR ''not a function''))
+         else RCrash (Error_invariant (STR ''out of bounds'')))
+      | _ \<Rightarrow> RCrash (Error_invalid (STR ''not run fully'')))
+  | (s', RI_crash res) \<Rightarrow> RCrash res       
+  | (s', RI_trap msg) \<Rightarrow> RTrap msg)"
+
 end
