@@ -3,6 +3,7 @@ Due to the collaborative nature of the project, indicating my authorship is some
 and ending with 
 (* end of part written by ... *)
 
+
 Files written by me:
 WebAssembly/Wasm_Instantiation_Properties.thy
 WebAssembly/Wasm_Instantiation_Properties_Aux.thy
