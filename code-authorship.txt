@@ -1,0 +1,19 @@
+Due to the collaborative nature of the project, indicating my authorship is somewhat involved. The parts written by someone else than the main author of the file are indicated with the blocks starting with 
+(* part written by ... *)
+and ending with 
+(* part written by ... *)
+
+Files written by me:
+WebAssembly/Wasm_Instantiation_Properties.thy
+WebAssembly/Wasm_Instantiation_Properties_Aux.thy
+WebAssembly/Wasm_Monad_Assertions.thy
+WebAssembly/Wasm_Interpreter_Monad_Properties.thy
+WebAssembly/Wasm_Instantiation_Monad_Properties.thy
+
+Files with sections I've written:
+WebAssembly/Wasm_Instantiation.thy
+WebAssembly/Wasm_Instantiation_Monad.thy
+WebAssembly/Wasm_Soundness.thy
+libs/Byte_Array.thy
+libs/List_Assn.thy
+libs/Separation_Logic_Imperative_HOL_Partial/Automation.thy

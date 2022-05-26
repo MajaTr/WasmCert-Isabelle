@@ -885,7 +885,7 @@ method_setup fr_rot_rhs = \<open>
   end
 \<close>
 
-
+(* part written in collaboration of me and Peter Lammich *)
 subsubsection \<open>Backward reasoning in entailment\<close>
 
 lemma ent_post_left_guard:"(A \<Longrightarrow>\<^sub>A emp * P) \<Longrightarrow> (A \<Longrightarrow>\<^sub>A P)" by simp
@@ -907,6 +907,7 @@ method ent_backward_process uses r =
 method ent_backward_finish = simp only:assn_one_left mult_1_right[where 'a=assn] flip:star_assoc
 
 method ent_backward_all uses r = (ent_backward_prepare, ent_backward_process r:r); ent_backward_finish?
+(* end of part written in collaboration of me and Peter Lammich *)
 
 
 (*<*)
@@ -1004,7 +1005,7 @@ lemma "<P * x\<mapsto>\<^sub>a[1,2,3]>
   apply sep_auto
   done
 
-
+(* part written in collaboration of me and Peter Lammich *)
 notepad begin
   fix A B D D1 D2 D3 P
   assume 1:"A \<Longrightarrow>\<^sub>A B" 
@@ -1081,6 +1082,7 @@ notepad begin
     apply(rule \<open>P\<close> ent_refl)+
     done
 end
+(* end of part written in collaboration of me and Peter Lammich *)
 
 
 (*>*)

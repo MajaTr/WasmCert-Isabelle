@@ -556,7 +556,7 @@ proof -
   show "\<exists>tes. list_all2 (\<lambda>v_exp te. external_typing s' (E_desc v_exp) te) v_exps tes"
     using instantiation_external_typing[OF s_alloc_module \<open>inst_typing s' inst \<C>\<close> c_is(5)] by -
 
-
+  (* part written by Conrad Watt *)
   have init_es_typing:"(s'\<bullet>\<C> \<turnstile> init_es : ([] _> []))"
   proof - 
     have "s'\<bullet>\<C> \<turnstile> (case (m_start m) of None \<Rightarrow> [] | Some i_s \<Rightarrow> [Invoke ((inst.funcs inst)!i_s)]) : ([] _> [])"
@@ -672,6 +672,7 @@ proof -
       using e_type_comp_conc init_es_is s_start
     by fastforce
   qed
+  (* end of part written by Conrad Watt *)
 
   show "\<turnstile> s'; \<lparr> f_locs = [], f_inst = inst \<rparr>; init_es : []" 
   proof -
@@ -691,7 +692,8 @@ qed
 theorem instantiation'_sound:
   assumes "store_typing s"
           "instantiate' s m v_imps ((s',f, init_es), v_exps)"
-  shows "\<turnstile> s'; f; init_es : []"
+  shows "store_typing s'" 
+        "\<turnstile> s'; f; init_es : []"
         "\<exists>tes. list_all2 (\<lambda>v_exp te. external_typing s' (E_desc v_exp) te) v_exps tes"
         "store_extension s s'"
   using assms instantiation_sound
@@ -766,18 +768,16 @@ proof -
     by simp
 
   have 0:"\<turnstile> s1;\<lparr>f_locs = [], f_inst = inst\<rparr>;es : []" 
-      using instantiation'_sound(1)[OF _ 1] unfolding store_typing.simps by auto
+      using instantiation'_sound(2)[OF _ 1] unfolding store_typing.simps by auto
   obtain f2 where 
     2:"reduce_trans (s1, \<lparr>f_locs = [], f_inst = inst\<rparr>, es) (s2, f2, [])"
     using run_iter_sound[OF init] by auto
   have 3:"external_typing s2 (Ext_func j) (Te_func (t1 _> t2))"
   proof -
     obtain te where 3:"external_typing s1 (Ext_func j) te"
-      using i_bounds j_def instantiation'_sound(2)[OF _ 1] list_all2_nthD[of _ v_exps _ i]
+      using i_bounds j_def instantiation'_sound(3)[OF _ 1] list_all2_nthD[of _ v_exps _ i]
       unfolding store_typing.simps 
       by fastforce
-
-  
       
     have 5:"store_extension s1 s2" using preservation_trans[OF 0 2] by auto
 
@@ -792,82 +792,7 @@ proof -
               (s3, f3, v_stack_to_es vs)"
     using run_invoke_v_sound[OF invoke] by auto
 
-  have "\<turnstile> s2; empty_frame; ($C* params) @ [Invoke j] : t2 "
-  proof - 
-    have 6:"store_typing s2" using preservation_trans[OF 0 2] unfolding config_typing.simps
-      by auto
 
-
-    have 7:"map typeof params = t1" using 4
-    proof(induct params arbitrary:t1 args_bytes)
-      case Nil
-      then show ?case by (auto simp:zip_eq_Nil_iff typeof_wasm_deserialise)
-    next
-      case (Cons p ps)
-      have "length (p#ps) = length t1" using Cons(2) length_zip
-        apply(auto)
-        by (smt (z3) Cons.hyps Suc_le_mono length_Cons length_map zip_eq_ConsE)
-      then obtain t ts where t1:"t1 = t#ts" apply(auto) 
-        by (meson Suc_length_conv)
-      have 1:"typeof p = t" using Cons(2) unfolding t1 
-        apply(auto simp:typeof_wasm_deserialise)
-        using zip_eq_ConsE by fastforce
-      have 2:"map2 wasm_deserialise (tl args_bytes) ts = ps" using Cons(2) unfolding t1
-        apply(auto)
-        using zip_eq_ConsE by fastforce
-      show ?case using Cons(1)[of ts "tl args_bytes "] 1 2 Cons(2) unfolding t1 
-        by auto
-    qed
-       
-      
-    {
-      fix \<C> 
-      have 8:"\<C> \<turnstile> map EConst params : ([] _> t1)" using 7
-      proof(induct params arbitrary: t1 rule:rev_induct  )
-        case Nil
-        then show ?case 
-          apply(auto)
-          apply(rule b_e_typing.empty)
-          done
-      next
-        case (snoc p ps)
-
-        obtain ts t where t1:"t1 = ts @ [t]" using snoc(2) by auto
-        have 1:"\<C> \<turnstile> map EConst ps : ([] _> ts)" using snoc(2) snoc(1) unfolding t1 by auto
-        have 2:"\<C> \<turnstile>  [EConst p] : ([] _> [t])" using snoc(2) b_e_typing.const unfolding t1 by auto
-        show ?case
-          apply(simp)
-          apply(rule b_e_typing.composition[OF 1])
-          using b_e_typing.weakening[OF 2] unfolding t1 by auto 
-      qed
-
-      have 9:"($C* params) = map (Basic \<circ> EConst) params"
-      by auto
-
-      have 10:"s2\<bullet>\<C> \<turnstile> ($C* params) : ([] _> t1)" 
-      apply(simp add:9)
-        using e_typing_l_typing.intros(1)[OF 8] by auto 
-
-      have 11:"s2\<bullet>\<C> \<turnstile> [Invoke j]  : (t1 _> t2)" 
-        apply(rule e_typing_l_typing.intros(6))
-        using 3 unfolding external_typing.simps 
-        by auto
-
-      have "s2\<bullet>\<C> \<turnstile> ($C* params) @ [Invoke j] : ([] _> t2)" 
-        apply(rule e_typing_l_typing.intros(2)[OF 10 11])
-        done
-        
-    }
-    note 13 = this
-
-    show ?thesis 
-      apply(rule)
-       apply(rule 6)
-      apply(rule)
-       apply(simp add:frame_typing.simps empty_frame_def inst_typing.simps)
-      apply(rule 13)
-      done
-  qed
 
   show ?thesis 
     using run_fuzz_spec.intros[OF 1 2 j_def 3 4 5] by auto

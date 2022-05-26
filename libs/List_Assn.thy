@@ -327,11 +327,12 @@ lemma extract_pre_list_assn_lengthD[extract_pure_rules]: "h \<Turnstile> list_as
 lemma extract_pre_listI_assn_lengthD[extract_pure_rules]: "h \<Turnstile> listI_assn I A xs xsi \<Longrightarrow> length xsi = length xs"
   by (simp add: listI_assn_def)
   
-
+(* part written by me *)
 lemma ent_triple_preI:
   assumes "\<And>h. h\<Turnstile>P \<Longrightarrow> P \<Longrightarrow>\<^sub>A Q"
   shows "P \<Longrightarrow>\<^sub>A Q"
   using assms unfolding entails_def by auto
+(* end of part written by me *)
 
 method extract_pre_pure uses dest =
   (rule hoare_triple_preI | rule ent_triple_preI | drule asm_rl[of "_\<Turnstile>_"]),

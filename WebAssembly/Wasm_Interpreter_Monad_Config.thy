@@ -2,6 +2,7 @@ theory Wasm_Interpreter_Monad_Config imports  Wasm_Countable Wasm_Interpreter
   "HOL-Imperative_HOL.Array" 
   "../libs/Byte_Array"   "../libs/List_Assn" begin 
 
+
 instance uint8 :: heap ..
 instance tf :: heap ..
 instance v :: heap ..
@@ -62,11 +63,11 @@ definition "inst_m_assn i i_m \<equiv>
 type_synonym inst_assocs = "(inst list \<times> inst_m list)"
 
 definition inst_assocs_assn :: "inst_assocs \<Rightarrow> assn" where
-  "inst_assocs_assn \<equiv> \<lambda>(is, i_ms). list_assn inst_m_assn is i_ms"
+  "inst_assocs_assn \<equiv> \<lambda>(insts, inst_ms). list_assn inst_m_assn insts inst_ms"
 
 definition inst_at :: "inst_assocs \<Rightarrow> (inst \<times> inst_m) \<Rightarrow> nat \<Rightarrow> bool " where 
-  "inst_at \<equiv> \<lambda>(is, i_ms) (i, i_m) j. j < min (length is) (length i_ms) 
-  \<and> is!j = i \<and> i_ms!j = i_m"
+  "inst_at \<equiv> \<lambda>(insts, inst_ms) (inst, inst_m) j. j < min (length insts) (length inst_ms) 
+  \<and> insts!j = inst \<and> inst_ms!j = inst_m"
 
 abbreviation "contains_inst i_s i \<equiv> \<exists> j. inst_at i_s i j"
 

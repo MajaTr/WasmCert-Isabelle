@@ -377,6 +377,7 @@ inductive instantiate :: "s \<Rightarrow> m \<Rightarrow> v_ext list \<Rightarro
 lemma map2_map_1:"map2 f (map g xs) ys = map2 (\<lambda>x y. f (g x) y) xs ys"
   by (simp add: map_zip_map)
 
+(* part written by me *)
 abbreviation "reduces_to s f bes v \<equiv> reduce_trans (s,f,$*bes) (s,f,[$v])"
 abbreviation "elem_in_bounds s inst off e \<equiv> 
   nat_of_int off + length (e_init e) \<le> tab_size ((tabs s)!((inst.tabs inst)!(e_tab e)))"
@@ -428,6 +429,8 @@ proof -
     by (metis (full_types) f.surjective old.unit.exhaust)
   show ?thesis using 1 2 3 by blast
 qed
+(* end of part written by me *)
+
 
 definition interp_get_v :: "s \<Rightarrow> inst \<Rightarrow> b_e list \<Rightarrow> v" where
   "interp_get_v s inst b_es = 
@@ -1271,6 +1274,7 @@ definition interp_instantiate_init :: "s \<Rightarrow> m \<Rightarrow> v_ext lis
                                          | (s'', RValue (x#xs)) \<Rightarrow> (s'', RI_crash (Error_invalid (STR ''start function''))))
                                      | x \<Rightarrow> x)"
 
+(* part written by me *)
 inductive run_fuzz_spec :: "m \<Rightarrow> v_ext list \<Rightarrow> nat \<Rightarrow> bytes list \<Rightarrow> e list \<Rightarrow> bool" where 
   "\<lbrakk>instantiate' \<lparr>s.funcs = [], tabs = [], mems = [], globs = [] \<rparr> m v_imps ((s1, f1, es), v_exps);
    reduce_trans (s1, f1, es) (s2, f2, []);
@@ -1299,5 +1303,6 @@ fun run_fuzz' :: "fuel \<Rightarrow> depth \<Rightarrow> m \<Rightarrow> v_ext l
       | _ \<Rightarrow> RCrash (Error_invalid (STR ''not run fully'')))
   | (s', RI_crash res) \<Rightarrow> RCrash res       
   | (s', RI_trap msg) \<Rightarrow> RTrap msg)"
+(* end of part written by me *)
 
 end

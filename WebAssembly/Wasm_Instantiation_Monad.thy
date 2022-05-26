@@ -253,7 +253,7 @@ definition interp_instantiate_init_m :: "s_m \<Rightarrow> m \<Rightarrow> v_ext
                                                   | (s'', RValue (x#xs)) \<Rightarrow> return (s'', RI_crash_m (Error_invalid (STR ''start function''))))}
                                             | x \<Rightarrow> return x }"
 
-
+(* part written by me *)
 fun run_fuzz_m' :: "fuel \<Rightarrow> depth \<Rightarrow> m \<Rightarrow> v_ext list \<Rightarrow> nat \<Rightarrow> bytes list \<Rightarrow> res Heap" where
   "run_fuzz_m' n d m v_imps i args_bytes = do {
    init_s \<leftarrow> make_empty_store_m;
@@ -277,5 +277,6 @@ fun run_fuzz_m' :: "fuel \<Rightarrow> depth \<Rightarrow> m \<Rightarrow> v_ext
       | _ \<Rightarrow> return (RCrash (Error_invalid (STR ''not run fully''))))        
   | (s', RI_crash_m res) \<Rightarrow> return (RCrash res)
   | (s', RI_trap_m msg) \<Rightarrow> return (RTrap msg) }"
+(* end of part written by me *)
 
 end
