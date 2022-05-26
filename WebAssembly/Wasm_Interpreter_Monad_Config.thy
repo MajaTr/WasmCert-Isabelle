@@ -49,7 +49,7 @@ datatype frame_context_m = Frame_context_m redex "label_context list" (frame_ari
 
 datatype config_m = Config_m depth s_m frame_context_m "frame_context_m list"
 
-
+(* part written by me *)
 
 (* assertions *) 
 
@@ -138,5 +138,7 @@ abbreviation "expect_assn A B x_opt y_opt \<equiv> (case x_opt of
   Some x \<Rightarrow> (case y_opt of Some y \<Rightarrow> A x y | None \<Rightarrow> false)
   | None \<Rightarrow> (case y_opt of Some y \<Rightarrow> false | None \<Rightarrow> B)
   )"
+
+(* end of part written by me *)
 
 end
