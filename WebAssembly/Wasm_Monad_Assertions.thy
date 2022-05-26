@@ -2,6 +2,7 @@ theory Wasm_Monad_Assertions
   imports Wasm_Interpreter_Monad "../libs/Misc_Generic_Lemmas" "../libs/List_Assn" begin
 (* separation logic methods *)
 
+(* part written by Peter Lammich *)
 method extract_list_idx for i :: nat =
   (subst listI_assn_extract[of i], (simp;fail), (simp;fail))
   
@@ -10,10 +11,14 @@ method reinsert_list_idx for i :: nat =
   (frame_inference; fail),
   (simp;fail),
   (simp;fail)
+(* end of part written by Peter Lammich *)
+
 
 method extract_reinsert_list_idx for i :: nat uses heap = 
  extract_pre_pure?, extract_list_idx i, sep_auto heap:heap, extract_pre_pure?, reinsert_list_idx i
 
+
+(* part written by Peter Lammich *)
 lemmas is_complex_goal = asm_rl[of "< _ > _ < _ >"] asm_rl[of "_ \<Longrightarrow>\<^sub>A _"]
 
 method_setup then_else = \<open>let
@@ -37,6 +42,7 @@ method defer_vcg = then_else \<open>rule is_complex_goal\<close> \<open>fail\<cl
   (rule is_complex_goal | tactic \<open>defer_tac 1\<close>)\<close>
 
 method sep_auto_all = (defer_vcg | (rule is_complex_goal, sep_auto))+
+(* end of part written by Peter Lammich *)
 
 
 
@@ -58,11 +64,11 @@ definition "inst_m_assn i i_m \<equiv>
 type_synonym inst_assocs = "(inst list \<times> inst_m list)"
 
 definition inst_assocs_assn :: "inst_assocs \<Rightarrow> assn" where
-  "inst_assocs_assn \<equiv> \<lambda>(is, i_ms). list_assn inst_m_assn is i_ms"
+  "inst_assocs_assn \<equiv> \<lambda>(insts, inst_ms). list_assn inst_m_assn insts inst_ms"
 
 definition inst_at :: "inst_assocs \<Rightarrow> (inst \<times> inst_m) \<Rightarrow> nat \<Rightarrow> bool " where 
-  "inst_at \<equiv> \<lambda>(is, i_ms) (i, i_m) j. j < min (length is) (length i_ms) 
-  \<and> is!j = i \<and> i_ms!j = i_m"
+  "inst_at \<equiv> \<lambda>(insts, inst_ms) (inst, inst_m) j. j < min (length insts) (length inst_ms) 
+  \<and> insts!j = inst \<and> inst_ms!j = inst_m"
 
 abbreviation "contains_inst i_s i \<equiv> \<exists> j. inst_at i_s i j"
 

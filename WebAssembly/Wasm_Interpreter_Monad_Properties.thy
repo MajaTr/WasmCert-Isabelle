@@ -2,6 +2,7 @@ theory Wasm_Interpreter_Monad_Properties
   imports "../libs/Misc_Generic_Lemmas" "../libs/List_Assn" 
     Wasm_Interpreter_Monad Wasm_Monad_Assertions begin
 
+(* part written by Conrad Watt *)
 lemma load_fX_from_uiX_bs_helper:
   assumes "n*8 = LENGTH('a::len)"
           "length bs \<le> n"
@@ -185,6 +186,7 @@ proof -
     unfolding i64_impl_rep_def
     by (simp add: Abs_uint64_inverse map_takefill Abs_uint8'.abs_eq zero_uint8.abs_eq)
 qed
+(* end of part written by Conrad Watt *)
 
 (*  heap rules, lemmas etc. about the assertions *)
 
@@ -239,9 +241,10 @@ lemma mem_size_triple:
   <\<lambda>r. \<up>(r = app_s_f_v_s_mem_size ms f v_s) *
    mems_m_assn ms ms_m * inst_m_assn (f_inst f) inst_m >"
   unfolding app_s_f_v_s_mem_size_m_def inst_m_assn_def mems_m_assn_def list_assn_conv_idx 
-  apply (sep_auto split:prod.splits)
+  apply(sep_auto split:prod.splits)
    apply(extract_reinsert_list_idx "inst.mems (f_inst f) ! 0")
-  apply (sep_auto simp add: app_s_f_v_s_mem_size_def smem_ind_def mem_size_def 
+  apply(sep_auto)
+  apply(simp add: app_s_f_v_s_mem_size_def smem_ind_def mem_size_def 
         mem_length_def mem_rep_length_def split: option.split list.split)  
   done
 

@@ -33,6 +33,7 @@ proof -
     by blast
 qed
 
+(* part written by me *)
 theorem preservation_trans:
   assumes "\<turnstile> s;f;es : ts"
           "reduce_trans (s,f,es) (s',f',es')"
@@ -54,6 +55,7 @@ proof -
       using store_extension_trans by blast
   qed
 qed 
+(* end of part written by me *)
 
   
 end

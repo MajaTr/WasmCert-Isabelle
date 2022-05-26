@@ -280,7 +280,7 @@ inductive reduce :: "[s, f, e list, s, f, e list] \<Rightarrow> bool" ("\<lparr>
 | init_tab_None:"\<lbrakk>stab_ind (f_inst f) = Some j; ((tabs s)!j) = t; store_tab t n icls = None\<rbrakk> \<Longrightarrow> \<lparr>s;f;[Init_tab n icls]\<rparr> \<leadsto> \<lparr>s;f;[Trap]\<rparr>"
 
 definition reduce_trans where
-  "reduce_trans \<equiv> (\<lambda>(s,f,es) (s',f',es'). \<lparr>s;f;es\<rparr> \<leadsto> \<lparr>s';f';es'\<rparr>)^**"
+  "reduce_trans \<equiv> rtranclp (\<lambda>(s,f,es) (s',f',es'). \<lparr>s;f;es\<rparr> \<leadsto> \<lparr>s';f';es'\<rparr>)"
 
 definition reduce_irrtrans where
   "reduce_irrtrans \<equiv> (\<lambda>(s,f,es) (s',f',es'). \<lparr>s;f;es\<rparr> \<leadsto> \<lparr>s';f';es'\<rparr>)^++"

@@ -249,7 +249,7 @@ definition store_uint64 :: "byte_array \<Rightarrow> nat \<Rightarrow> uint64 \<
   "store_uint64 a n v \<equiv> store_uintX_of_uint64 a n v 8"
 
 (* load/store heap rules *) 
-
+(* part written by me *)
 lemma [sep_heap_rules]: "<a \<mapsto>\<^sub>b\<^sub>a la> 
   load_uint8 a n
    <\<lambda>r. \<up>(n < length la \<and> r = la!n) * a \<mapsto>\<^sub>b\<^sub>a la >"
@@ -413,5 +413,6 @@ lemma [sep_heap_rules]:
   unfolding store_uint8_of_uint64_def store_uint16_of_uint64_def 
             store_uint32_of_uint64_def store_uint64_def
   by sep_auto+
+(* end of part written by me *)
 
 end
