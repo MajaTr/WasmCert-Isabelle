@@ -196,9 +196,9 @@ lemma pure_dup:
   using assms unfolding is_pure_assn_def
   by auto
 
-lemma funcs_nth_type_triple:"<funcs_m_assn i_s cls cls_m> 
+lemma funcs_nth_type_triple:"<funcs_m_assn ias cls cls_m> 
     Array.nth cls_m i  
-    <\<lambda>r. \<up>(cl_m_agree i_s (cls!i) r) * funcs_m_assn i_s cls cls_m>" 
+    <\<lambda>r. \<up>(cl_m_agree ias (cls!i) r) * funcs_m_assn ias cls cls_m>" 
   unfolding funcs_m_assn_def list_assn_conv_idx
   apply(sep_auto heap del:nth_rule)
   apply(extract_pre_pure)
@@ -211,12 +211,12 @@ definition "fc_m_assn_pure fc fc_m \<equiv> (
   redex = redex_m \<and> lcs = lcs_m \<and> nf = nf_m)"
 
 lemma extract_pre_fc_m_assn[extract_pure_rules]: 
-  "h \<Turnstile> fc_m_assn i_s fc fc_m \<Longrightarrow> fc_m_assn_pure fc fc_m"
+  "h \<Turnstile> fc_m_assn ias fc fc_m \<Longrightarrow> fc_m_assn_pure fc fc_m"
   unfolding fc_m_assn_def fc_m_assn_pure_def 
   by (sep_auto split:frame_context.splits frame_context_m.splits)
 
-lemma [simp]:"fcs_m_assn i_s (fc#fcs) (fc_m#fcs_m) = 
-  fc_m_assn i_s fc fc_m * fcs_m_assn i_s fcs fcs_m"
+lemma [simp]:"fcs_m_assn ias (fc#fcs) (fc_m#fcs_m) = 
+  fc_m_assn ias fc fc_m * fcs_m_assn ias fcs fcs_m"
   unfolding fcs_m_assn_def by simp
 
 definition "cfg_m_assn_pure cfg cfg_m = (
@@ -226,7 +226,7 @@ definition "cfg_m_assn_pure cfg cfg_m = (
 )"     
 
 lemma extract_pre_cfg_m_assn[extract_pure_rules]: 
-  "h \<Turnstile> cfg_m_assn i_s cfg cfg_m \<Longrightarrow> cfg_m_assn_pure cfg cfg_m"
+  "h \<Turnstile> cfg_m_assn ias cfg cfg_m \<Longrightarrow> cfg_m_assn_pure cfg cfg_m"
   unfolding cfg_m_assn_def cfg_m_assn_pure_def fcs_m_assn_def
   apply (sep_auto split:config.splits config_m.splits)
   subgoal by (metis mod_starE extract_pre_fc_m_assn)
@@ -313,12 +313,12 @@ qed
 
 (* todo: rewrite proofs of other troublesome triples to use sep_auto_all *)
 lemma call_indirect_triple:
-  assumes "inst_at i_s (f_inst f, f_inst2) j"
+  assumes "inst_at ias (f_inst f, f_inst2) j"
   shows 
-  "<tabs_m_assn ts ts_m * funcs_m_assn i_s fs fs_m * inst_assocs_assn i_s> 
+  "<tabs_m_assn ts ts_m * funcs_m_assn ias fs fs_m * inst_assocs_assn ias> 
   app_s_f_v_s_call_indirect_m k ts_m fs_m f_inst2 v_s
   <\<lambda>r. \<up>(r = app_s_f_v_s_call_indirect k ts fs f v_s) 
-* tabs_m_assn ts ts_m * funcs_m_assn i_s fs fs_m * inst_assocs_assn i_s>"
+* tabs_m_assn ts ts_m * funcs_m_assn ias fs fs_m * inst_assocs_assn ias>"
   using assms
   unfolding app_s_f_v_s_call_indirect_m_def inst_assocs_assn_def inst_at_def
   supply [split] = v.splits v_num.splits option.splits
@@ -781,13 +781,13 @@ lemma init_tab_triple:
 (* run_step_b_e *)
 
 abbreviation cfg_m_pair_assn where 
-  "cfg_m_pair_assn i_s \<equiv> 
-    \<lambda>(cfg, res) (cfg_m, res_m). cfg_m_assn i_s cfg cfg_m * \<up>(res = res_m)"
+  "cfg_m_pair_assn ias \<equiv> 
+    \<lambda>(cfg, res) (cfg_m, res_m). cfg_m_assn ias cfg cfg_m * \<up>(res = res_m)"
   
 lemma run_step_b_e_m_triple:
-    "<cfg_m_assn i_s cfg cfg_m> 
+    "<cfg_m_assn ias cfg cfg_m> 
     run_step_b_e_m b_e cfg_m 
-    <\<lambda>r. cfg_m_pair_assn i_s (run_step_b_e b_e cfg) r>\<^sub>t"
+    <\<lambda>r. cfg_m_pair_assn ias (run_step_b_e b_e cfg) r>\<^sub>t"
 proof - 
   obtain d s fc fcs where config:"cfg = Config d s fc fcs"
     by(erule config.exhaust)
@@ -808,8 +808,8 @@ proof -
   note unfold_vars = config frame redex unfold_vars_m
   note unfold_vars_assns = unfold_vars cfg_m_assn_def fc_m_assn_def
 
-  obtain j where j_def:"cfg_m_assn i_s cfg cfg_m \<Longrightarrow>\<^sub>A 
-    \<up>(inst_at i_s ((f_inst f), f_inst2) j) * cfg_m_assn i_s cfg cfg_m"
+  obtain j where j_def:"cfg_m_assn ias cfg cfg_m \<Longrightarrow>\<^sub>A 
+    \<up>(inst_at ias ((f_inst f), f_inst2) j) * cfg_m_assn ias cfg cfg_m"
     unfolding unfold_vars_assns by sep_auto
 
   note extract_j = cons_pre_rulet[OF ent_imp_entt[OF j_def]]
@@ -1006,7 +1006,7 @@ qed
 
 
 lemma funcs_nth_triple:
-  assumes "list_all2 (cl_m_agree i_s) fs fs_i" 
+  assumes "list_all2 (cl_m_agree ias) fs fs_i" 
   shows "< fs_m\<mapsto>\<^sub>a fs_i> 
   Array.nth fs_m i 
   <\<lambda>r. \<up>(i < length fs_i \<and> r = fs_i!i) * fs_m \<mapsto>\<^sub>a fs_i>"
@@ -1014,9 +1014,9 @@ lemma funcs_nth_triple:
   by(sep_auto)
 
 lemma funcs_nth_triple_s:
-  "< s_m_assn i_s s s_m> 
+  "< s_m_assn ias s s_m> 
   Array.nth (s_m.funcs s_m) i 
-  <\<lambda>r. \<up>(i < length (s.funcs s) \<and> cl_m_agree i_s (s.funcs s!i) r) * s_m_assn i_s s s_m>"
+  <\<lambda>r. \<up>(i < length (s.funcs s) \<and> cl_m_agree ias (s.funcs s!i) r) * s_m_assn ias s s_m>"
   unfolding s_m_assn_def funcs_m_assn_def
   by (sep_auto heap:funcs_nth_triple heap del:nth_rule simp:list_all2_conv_all_nth)
 
@@ -1053,9 +1053,9 @@ lemma app_s_f_init_tab_m_triple:
   done
 
 lemma run_step_e_m_triple:
-    "<cfg_m_assn i_s cfg cfg_m> 
+    "<cfg_m_assn ias cfg cfg_m> 
     run_step_e_m e cfg_m 
-    <\<lambda>r. cfg_m_pair_assn i_s (run_step_e e cfg) r>\<^sub>t"
+    <\<lambda>r. cfg_m_pair_assn ias (run_step_e e cfg) r>\<^sub>t"
 proof -
   obtain d s fc fcs where config:"cfg = Config d s fc fcs"
     by(erule config.exhaust)
@@ -1074,8 +1074,8 @@ proof -
   note unfold_vars = config frame redex unfold_vars_m
   note unfold_vars_assns = unfold_vars cfg_m_assn_def fc_m_assn_def
 
-  obtain j where j_def:"cfg_m_assn i_s cfg cfg_m \<Longrightarrow>\<^sub>A 
-    \<up>(inst_at i_s ((f_inst f), f_inst2) j) * cfg_m_assn i_s cfg cfg_m"
+  obtain j where j_def:"cfg_m_assn ias cfg cfg_m \<Longrightarrow>\<^sub>A 
+    \<up>(inst_at ias ((f_inst f), f_inst2) j) * cfg_m_assn ias cfg cfg_m"
     unfolding unfold_vars_assns by sep_auto
 
   note extract_j = cons_pre_rulet[OF ent_imp_entt[OF j_def]]
@@ -1135,19 +1135,19 @@ qed
 (* run_iter *)
 
 lemma update_fc_return_preserve_assn:
-  "cfg_m_assn i_s (Config d s fc (fc'#fcs)) (Config_m d_m s_m fc_m (fc'_m#fcs_m)) 
-  \<Longrightarrow>\<^sub>A cfg_m_assn i_s (Config (Suc d) s (update_fc_return fc' v_s) fcs)
+  "cfg_m_assn ias (Config d s fc (fc'#fcs)) (Config_m d_m s_m fc_m (fc'_m#fcs_m)) 
+  \<Longrightarrow>\<^sub>A cfg_m_assn ias (Config (Suc d) s (update_fc_return fc' v_s) fcs)
     (Config_m (Suc d_m) s_m (update_fc_return_m fc'_m v_s) fcs_m) * true"
   unfolding cfg_m_assn_def 
   apply (sep_auto)
   unfolding fc_m_assn_def
   by (sep_auto split:frame_context.splits frame_context_m.splits)
 
-lemma update_redex_lc_preserve_assn:"cfg_m_assn i_s
+lemma update_redex_lc_preserve_assn:"cfg_m_assn ias
        (Config d s (Frame_context redex lcs nf f) fcs)
        (Config_m d_m s_m (Frame_context_m redex_m 
         lcs_m nf_m f_locs1 f_inst2) fcs_m)
-  \<Longrightarrow>\<^sub>A cfg_m_assn i_s 
+  \<Longrightarrow>\<^sub>A cfg_m_assn ias 
        (Config d s (Frame_context (g1 redex lcs) (g2 redex lcs) nf f) fcs)
        (Config_m d_m s_m (Frame_context_m (g1 redex_m lcs) 
         (g2 redex_m lcs_m) nf_m f_locs1 f_inst2) fcs_m) "
@@ -1155,10 +1155,10 @@ lemma update_redex_lc_preserve_assn:"cfg_m_assn i_s
   by (sep_auto)
 
 lemma run_iter_m_triple:
-    "<cfg_m_assn i_s cfg cfg_m> 
+    "<cfg_m_assn ias cfg cfg_m> 
     run_iter_m n cfg_m 
-    <\<lambda>r. cfg_m_pair_assn i_s (run_iter n cfg) r>\<^sub>t"
-proof(induct n arbitrary: i_s cfg cfg_m)
+    <\<lambda>r. cfg_m_pair_assn ias (run_iter n cfg) r>\<^sub>t"
+proof(induct n arbitrary: ias cfg cfg_m)
   case 0
   show ?case unfolding 0 by sep_auto
 next
@@ -1207,14 +1207,14 @@ qed
 
 
 lemma run_v_m_triple: 
-  assumes "inst_at i_s (f_inst f, f_inst2) j" 
-  shows "< s_m_assn i_s s s_m * inst_assocs_assn i_s * locs_m_assn (f_locs f) f_locs1 > 
+  assumes "inst_at ias (f_inst f, f_inst2) j" 
+  shows "< s_m_assn ias s s_m * inst_assocs_assn ias * locs_m_assn (f_locs f) f_locs1 > 
   run_v_m n d (s_m, f_locs1, f_inst2, b_es) 
   <\<lambda>(s_m', res_m). let (s', res) = run_v n d (s, f, b_es) in 
-  \<up>(res_m = res) * s_m_assn i_s s' s_m' * inst_assocs_assn i_s >\<^sub>t"
+  \<up>(res_m = res) * s_m_assn ias s' s_m' * inst_assocs_assn ias >\<^sub>t"
 proof - 
-  have 1:"s_m_assn i_s s s_m * inst_assocs_assn i_s * locs_m_assn (f_locs f) f_locs1
-      \<Longrightarrow>\<^sub>A cfg_m_assn i_s 
+  have 1:"s_m_assn ias s s_m * inst_assocs_assn ias * locs_m_assn (f_locs f) f_locs1
+      \<Longrightarrow>\<^sub>A cfg_m_assn ias 
       (Config d s (Frame_context (Redex [] [] b_es) [] 0 f) [])
       (Config_m d s_m (Frame_context_m (Redex [] [] b_es) [] 0 f_locs1 f_inst2) [])"
     using assms
@@ -1229,18 +1229,18 @@ qed
 
 
 lemma run_instantiate_m_triple:
-  assumes "inst_at i_s (i, i_m) j" 
-  shows "< s_m_assn i_s s s_m * inst_assocs_assn i_s> 
+  assumes "inst_at ias (i, i_m) j" 
+  shows "< s_m_assn ias s s_m * inst_assocs_assn ias> 
   run_instantiate_m n d (s_m, i_m, es)
   <\<lambda>(s_m', res_m). let (s', res) = run_instantiate n d (s, i, es) in \<up>(res_m = res) 
-  * s_m_assn i_s s' s_m' * inst_assocs_assn i_s >\<^sub>t"
+  * s_m_assn ias s' s_m' * inst_assocs_assn ias >\<^sub>t"
 proof - 
   note 1 = cfg_m_assn_def fc_m_assn_def fcs_m_assn_def  locs_m_assn_def
 
   {
     fix locs
-    have "locs \<mapsto>\<^sub>a [] * s_m_assn i_s s s_m * inst_assocs_assn i_s
-      \<Longrightarrow>\<^sub>A cfg_m_assn i_s 
+    have "locs \<mapsto>\<^sub>a [] * s_m_assn ias s s_m * inst_assocs_assn ias
+      \<Longrightarrow>\<^sub>A cfg_m_assn ias 
           (Config d s (Frame_context (Redex [] es []) [] 0 \<lparr>f_locs = [], f_inst=i\<rparr>) [])
           (Config_m d s_m (Frame_context_m (Redex [] es []) [] 0 locs i_m) [])"
       unfolding 1 using assms by sep_auto
@@ -1281,22 +1281,22 @@ lemma make_empty_frame_m_triple:
   by (sep_auto heap:make_empty_inst_m_triple)
 
 lemma run_invoke_v_m_triple: 
-  shows "< s_m_assn i_s s s_m * inst_assocs_assn i_s> 
+  shows "< s_m_assn ias s s_m * inst_assocs_assn ias> 
   run_invoke_v_m n d (s_m, vs, i) 
   <\<lambda>(s_m', res_m). let (s', res) = run_invoke_v n d (s, vs, i)  in
-  \<exists>\<^sub>Ai_s'. \<up>(res_m = res) * s_m_assn i_s' s' s_m' * inst_assocs_assn i_s' >\<^sub>t"
+  \<exists>\<^sub>Aias'. \<up>(res_m = res) * s_m_assn ias' s' s_m' * inst_assocs_assn ias' >\<^sub>t"
 proof - 
   note 1 = cfg_m_assn_def fc_m_assn_def fcs_m_assn_def  locs_m_assn_def
-  obtain ins in_ms where i_s:"i_s = (ins, in_ms)" 
+  obtain ins in_ms where ias:"ias = (ins, in_ms)" 
     by fastforce
   {
     fix f_locs1 f_inst2
     have "inst_m_assn (f_inst empty_frame) f_inst2 * locs_m_assn (f_locs empty_frame) f_locs1 
-        * s_m_assn i_s s s_m * inst_assocs_assn i_s
+        * s_m_assn ias s s_m * inst_assocs_assn ias
       \<Longrightarrow>\<^sub>A cfg_m_assn ((f_inst empty_frame)#ins, f_inst2#in_ms)
           (Config d s (Frame_context (Redex (rev vs) [Invoke i] []) [] 0 empty_frame) [])
           (Config_m d s_m (Frame_context_m (Redex (rev vs) [Invoke i] []) [] 0 f_locs1 f_inst2) [])"
-      unfolding 1 inst_assocs_assn_def i_s inst_at_def 
+      unfolding 1 inst_assocs_assn_def ias inst_at_def 
       apply(sep_auto)
       apply(ent_backward_all r:s_m_assn_extend)
       apply(sep_auto)

@@ -69,16 +69,16 @@ definition inst_at :: "inst_assocs \<Rightarrow> (inst \<times> inst_m) \<Righta
   "inst_at \<equiv> \<lambda>(insts, inst_ms) (inst, inst_m) j. j < min (length insts) (length inst_ms) 
   \<and> insts!j = inst \<and> inst_ms!j = inst_m"
 
-abbreviation "contains_inst i_s i \<equiv> \<exists> j. inst_at i_s i j"
+abbreviation "contains_inst ias i \<equiv> \<exists> j. inst_at ias i j"
 
 
 
 definition cl_m_agree_j :: "inst_assocs \<Rightarrow> nat \<Rightarrow> cl \<Rightarrow> cl_m \<Rightarrow> bool" where 
-  "cl_m_agree_j i_s j cl cl_m = (case cl of 
+  "cl_m_agree_j ias j cl cl_m = (case cl of 
   cl.Func_native i tf ts b_es \<Rightarrow> 
     (case cl_m of 
     cl_m.Func_native i_m tf_m ts_m b_es_m \<Rightarrow> 
-    inst_at i_s (i, i_m) j \<and> tf = tf_m \<and> ts = ts_m \<and> b_es = b_es_m
+    inst_at ias (i, i_m) j \<and> tf = tf_m \<and> ts = ts_m \<and> b_es = b_es_m
   | cl_m.Func_host tf_m host_m \<Rightarrow> False)
 | cl.Func_host tf host \<Rightarrow> 
     (case cl_m of 
@@ -86,10 +86,10 @@ definition cl_m_agree_j :: "inst_assocs \<Rightarrow> nat \<Rightarrow> cl \<Rig
   | cl_m.Func_host tf_m host_m \<Rightarrow> tf = tf_m \<and> host = host_m)
 )"
 
-definition "cl_m_agree i_s cl cl_m \<equiv> \<exists>j. cl_m_agree_j i_s j cl cl_m"
+definition "cl_m_agree ias cl cl_m \<equiv> \<exists>j. cl_m_agree_j ias j cl cl_m"
 
 definition funcs_m_assn :: "inst_assocs \<Rightarrow> cl list \<Rightarrow> cl_m array \<Rightarrow> assn" where
-  "funcs_m_assn i_s fs fs_m = (\<exists>\<^sub>A fs_i. fs_m \<mapsto>\<^sub>a fs_i *\<up>(list_all2 (cl_m_agree i_s)  fs fs_i))"
+  "funcs_m_assn ias fs fs_m = (\<exists>\<^sub>A fs_i. fs_m \<mapsto>\<^sub>a fs_i *\<up>(list_all2 (cl_m_agree ias)  fs fs_i))"
 
 definition tabinst_m_assn :: "tabinst \<Rightarrow> tabinst_m \<Rightarrow> assn" where 
   "tabinst_m_assn = (\<lambda>(tr,tm) (tr_m,tm_m). tr_m \<mapsto>\<^sub>a tr * \<up>(tm = tm_m))"
@@ -105,8 +105,8 @@ definition tabs_m_assn :: "tabinst list \<Rightarrow> tabinst_m array \<Rightarr
 definition "globs_m_assn gs gs_m \<equiv> gs_m \<mapsto>\<^sub>a gs"
 
 definition s_m_assn :: "inst_assocs \<Rightarrow> s \<Rightarrow> s_m \<Rightarrow> assn" where 
-  "s_m_assn i_s s s_m = 
-  funcs_m_assn i_s (s.funcs s) (s_m.funcs s_m)
+  "s_m_assn ias s s_m = 
+  funcs_m_assn ias (s.funcs s) (s_m.funcs s_m)
 * tabs_m_assn  (s.tabs s)  (s_m.tabs s_m)
 * mems_m_assn  (s.mems s)  (s_m.mems s_m)
 * globs_m_assn (s.globs s) (s_m.globs s_m)"
@@ -115,22 +115,22 @@ definition locs_m_assn :: "v list \<Rightarrow> v array \<Rightarrow> assn" wher
   "locs_m_assn locs locs_m = locs_m \<mapsto>\<^sub>a locs"
 
 definition fc_m_assn :: "inst_assocs \<Rightarrow> frame_context \<Rightarrow> frame_context_m \<Rightarrow> assn" where 
-  "fc_m_assn i_s fc fc_m = (
+  "fc_m_assn ias fc fc_m = (
   case fc of Frame_context redex lcs nf f \<Rightarrow> 
   case fc_m of Frame_context_m redex_m lcs_m nf_m f_locs1 f_inst2 \<Rightarrow>
-  \<up>(redex = redex_m \<and> lcs = lcs_m \<and> nf = nf_m \<and> contains_inst i_s (f_inst f, f_inst2))
+  \<up>(redex = redex_m \<and> lcs = lcs_m \<and> nf = nf_m \<and> contains_inst ias (f_inst f, f_inst2))
   * locs_m_assn (f_locs f) f_locs1
 )"
 
-definition "fcs_m_assn i_s fcs fcs_m \<equiv> list_assn (fc_m_assn i_s) fcs fcs_m"
+definition "fcs_m_assn ias fcs fcs_m \<equiv> list_assn (fc_m_assn ias) fcs fcs_m"
 
 definition cfg_m_assn :: "inst_assocs \<Rightarrow> config \<Rightarrow> config_m \<Rightarrow> assn" where
-  "cfg_m_assn i_s cfg cfg_m = (
+  "cfg_m_assn ias cfg cfg_m = (
   case cfg of Config d s fc fcs \<Rightarrow>
   case cfg_m of Config_m d_m s_m fc_m fcs_m \<Rightarrow> 
   \<up>(d=d_m) 
-  * s_m_assn i_s s s_m * fc_m_assn i_s fc fc_m * fcs_m_assn i_s fcs fcs_m
-  * inst_assocs_assn i_s
+  * s_m_assn ias s s_m * fc_m_assn ias fc fc_m * fcs_m_assn ias fcs fcs_m
+  * inst_assocs_assn ias
 )"     
 
 
